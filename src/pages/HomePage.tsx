@@ -15,7 +15,7 @@ const HomePage: React.FC = () => {
       <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden bg-stone-900">
         <div className="absolute inset-0">
           <img 
-            src="https://images.pexels.com/photos/161798/rome-italy-colosseum-161798.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Colosseum_in_Rome%2C_Italy_-_April_2007.jpg/1280px-Colosseum_in_Rome%2C_Italy_-_April_2007.jpg" 
             alt="Antiguo Coliseo Romano" 
             className="w-full h-full object-cover opacity-30"
           />

@@ -17,8 +17,8 @@ const AboutPage: React.FC = () => {
         
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-12">
           <img 
-            src="https://images.pexels.com/photos/3769535/pexels-photo-3769535.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
-            alt="Estudiantes aprendiendo historia"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Muse_clio.jpg/800px-Muse_clio.jpg" 
+            alt="Clio, la musa de la historia"
             className="w-full h-72 object-cover"
           />
           
