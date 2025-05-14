@@ -1,179 +1,137 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useGame } from '../contexts/GameContext';
-import { Clock, Trophy, ChevronRight } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Clock, BookOpen, Trophy } from 'lucide-react';
+import CivilizationGrid from '../components/home/CivilizationGrid';
 
-const HomePage = () => {
-  const { civilizations, userProgress } = useGame();
-
-  // Get recently played civilizations
-  const getRecentCivilizations = () => {
-    const civilizationEntries = Object.entries(userProgress.completedCivilizations);
-    
-    if (civilizationEntries.length === 0) return [];
-    
-    return civilizationEntries
-      .sort((a, b) => {
-        const dateA = new Date(a[1].lastPlayed).getTime();
-        const dateB = new Date(b[1].lastPlayed).getTime();
-        return dateB - dateA;
-      })
-      .slice(0, 3)
-      .map(([id]) => civilizations.find(civ => civ.id === id))
-      .filter(Boolean);
-  };
-
-  const recentCivilizations = getRecentCivilizations();
+const HomePage: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = 'Cronos - Juego Educativo de Historia';
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[url('https://images.pexels.com/photos/2166927/pexels-photo-2166927.jpeg')] bg-cover bg-fixed bg-center">
-      <div className="min-h-screen bg-stone-900/70">
-        <div className="container mx-auto px-4 py-12">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-amber-100 mb-4">
+    <div>
+      {/* Hero Section */}
+      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden bg-stone-900">
+        <div className="absolute inset-0">
+          <img 
+            src="https://images.pexels.com/photos/161798/rome-italy-colosseum-161798.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
+            alt="Antiguo Coliseo Romano" 
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-stone-900/60 to-stone-900"></div>
+        </div>
+        
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <Clock className="w-20 h-20 mx-auto text-gold-500 mb-6" />
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-bold text-white mb-6">
               CRONOS
             </h1>
-            <p className="text-xl text-amber-50/90">
-              Viaja por el tiempo y aprende historia ordenando los eventos más significativos
-              de las grandes civilizaciones del mundo.
+            <p className="text-xl sm:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+              Viaja por el tiempo y pon a prueba tus conocimientos históricos ordenando 
+              cronológicamente los eventos más importantes de cada civilización.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {civilizations.map((civilization) => {
-              const progress = userProgress.completedCivilizations[civilization.id];
-              const totalEvents = civilization.eventos.length;
-              const completedEvents = progress?.totalEventsCorrect || 0;
-              const progressPercentage = progress 
-                ? Math.round((completedEvents / totalEvents) * 100) 
-                : 0;
-              
-              return (
-                <div 
-                  key={civilization.id}
-                  className="bg-stone-100 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-[1.02] hover:shadow-xl"
-                >
-                  <div 
-                    className="h-48 bg-cover bg-center" 
-                    style={{ backgroundImage: `url(${civilization.imagen})` }}
-                  >
-                    <div className="h-full w-full bg-gradient-to-t from-stone-900/80 to-transparent p-4 flex flex-col justify-end">
-                      <h3 className="text-xl font-serif font-bold text-white">
-                        {civilization.nombre}
-                      </h3>
-                      <p className="text-sm text-stone-200">{civilization.periodoHistorico}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4">
-                    <p className="text-sm text-stone-600 mb-4 line-clamp-2">
-                      {civilization.descripcion}
-                    </p>
-
-                    {progress ? (
-                      <div className="mb-4">
-                        <div className="flex justify-between text-xs text-stone-500 mb-1">
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            <span>{completedEvents}/{totalEvents} eventos</span>
-                          </div>
-                          <span>{progressPercentage}%</span>
-                        </div>
-                        <div className="h-2 bg-stone-200 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-amber-600 rounded-full"
-                            style={{ width: `${progressPercentage}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mb-4">
-                        <div className="flex items-center text-xs text-stone-500">
-                          <Clock className="h-3 w-3 mr-1" />
-                          <span>Sin progreso aún</span>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {progress?.badges && progress.badges.length > 0 && (
-                      <div className="flex mb-4">
-                        {progress.badges.map((badge, index) => (
-                          <div 
-                            key={index} 
-                            className="h-6 w-6 rounded-full bg-amber-500 mr-1 flex items-center justify-center"
-                            title={`Insignia: ${badge}`}
-                          >
-                            <Trophy className="h-3 w-3 text-white" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <Link
-                      to={`/game-modes/${civilization.id}`}
-                      className="block w-full bg-amber-700 hover:bg-amber-800 text-white py-2 rounded-md text-center transition duration-200 font-medium"
-                    >
-                      Jugar
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            <a 
+              href="#civilizaciones" 
+              className="btn-primary text-lg px-8 py-3 inline-block"
+            >
+              Comenzar Aventura
+            </a>
+          </motion.div>
+        </div>
+      </section>
+      
+      {/* Features Section */}
+      <section className="py-16 bg-parchment-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-display font-bold text-center text-stone-800 mb-12">
+            Descubre el Pasado de Forma Interactiva
+          </h2>
           
-          {recentCivilizations.length > 0 && (
-            <div className="bg-stone-800/80 rounded-lg p-6 mb-8">
-              <h2 className="text-xl font-serif font-bold text-amber-100 mb-4">
-                Continúa Aprendiendo
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {recentCivilizations.map((civilization) => (
-                  civilization && (
-                    <Link
-                      key={civilization.id}
-                      to={`/game-modes/${civilization.id}`}
-                      className="flex items-center bg-stone-700/80 hover:bg-stone-600/80 rounded-md p-3 text-stone-100 transition duration-200"
-                    >
-                      <div 
-                        className="h-12 w-12 rounded-md bg-cover bg-center mr-3 flex-shrink-0" 
-                        style={{ backgroundImage: `url(${civilization.imagen})` }}
-                      ></div>
-                      <div className="flex-grow">
-                        <h3 className="font-medium">{civilization.nombre}</h3>
-                        <p className="text-xs text-stone-300">Continuar jugando</p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-stone-400" />
-                    </Link>
-                  )
-                ))}
-              </div>
-            </div>
-          )}
-          
-          <div className="bg-amber-700/90 rounded-lg p-6">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="mb-4 md:mb-0">
-                <h2 className="text-xl font-serif font-bold text-white">
-                  Tabla de Clasificación Global
-                </h2>
-                <p className="text-amber-100/90">
-                  ¡Compite con otros estudiantes y demuestra tu conocimiento histórico!
-                </p>
-              </div>
-              
-              <Link
-                to="/leaderboard"
-                className="bg-white hover:bg-amber-50 text-amber-800 px-6 py-2 rounded-md inline-flex items-center font-medium transition duration-200"
-              >
-                Ver Clasificación
-                <ChevronRight className="h-5 w-5 ml-1" />
-              </Link>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Feature 
+              icon={<Clock className="w-12 h-12 text-terracotta-500" />}
+              title="Cronología Interactiva"
+              description="Ordena eventos históricos en una línea del tiempo y aprende sobre su secuencia y relaciones."
+            />
+            <Feature 
+              icon={<BookOpen className="w-12 h-12 text-terracotta-500" />}
+              title="Contenido Educativo"
+              description="Explora información detallada sobre cada evento histórico con explicaciones contextuales."
+            />
+            <Feature 
+              icon={<Trophy className="w-12 h-12 text-terracotta-500" />}
+              title="Seguimiento de Progreso"
+              description="Mide tu conocimiento histórico con puntuaciones y estadísticas de rendimiento."
+            />
           </div>
         </div>
-      </div>
+      </section>
+      
+      {/* Civilizations Section */}
+      <section id="civilizaciones" className="py-16 bg-stone-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-display font-bold text-center text-stone-800 mb-4">
+            Explora Civilizaciones
+          </h2>
+          <p className="text-center text-stone-600 mb-12 max-w-3xl mx-auto">
+            Selecciona una civilización histórica para poner a prueba tus conocimientos.
+            Cada una contiene eventos únicos y desafiantes para ordenar.
+          </p>
+          
+          <CivilizationGrid />
+        </div>
+      </section>
+      
+      {/* CTA Section */}
+      <section className="py-16 bg-terracotta-500 text-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-display font-bold mb-6">
+            ¿Listo para Poner a Prueba tus Conocimientos Históricos?
+          </h2>
+          <p className="text-xl mb-8 max-w-3xl mx-auto">
+            Sumérgete en la historia, aprende mientras juegas y compite contra tus amigos.
+          </p>
+          <a 
+            href="#civilizaciones" 
+            className="btn bg-white text-terracotta-600 hover:bg-parchment-100 text-lg px-8 py-3 inline-block"
+          >
+            Comenzar Ahora
+          </a>
+        </div>
+      </section>
     </div>
+  );
+};
+
+interface FeatureProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+const Feature: React.FC<FeatureProps> = ({ icon, title, description }) => {
+  return (
+    <motion.div 
+      className="bg-white p-6 rounded-lg shadow-md text-center"
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="flex justify-center mb-4">
+        {icon}
+      </div>
+      <h3 className="text-xl font-display font-semibold text-stone-800 mb-3">
+        {title}
+      </h3>
+      <p className="text-stone-600">
+        {description}
+      </p>
+    </motion.div>
   );
 };
 

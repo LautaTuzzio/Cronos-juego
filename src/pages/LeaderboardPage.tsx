@@ -1,250 +1,334 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Trophy, Users, Medal, Filter } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Trophy, Medal, Clock, BookOpen, Calendar, Filter } from 'lucide-react';
+import { useGame } from '../context/GameContext';
+import civilizations from '../data/civilizations';
 
-// Mock data for leaderboard
-const leaderboardData = [
-  { id: 1, username: 'HistoriaFan2005', score: 9850, civilizations: ['roma', 'grecia', 'francia'], badges: 12 },
-  { id: 2, username: 'CronologiaMaestro', score: 9720, civilizations: ['roma', 'grecia', 'francia'], badges: 10 },
-  { id: 3, username: 'TiempoVerdad', score: 9500, civilizations: ['roma', 'grecia'], badges: 8 },
-  { id: 4, username: 'HistoriaExplorador', score: 9200, civilizations: ['roma', 'grecia'], badges: 7 },
-  { id: 5, username: 'PasadoPresente', score: 8950, civilizations: ['roma', 'francia'], badges: 6 },
-  { id: 6, username: 'EventoExacto', score: 8800, civilizations: ['roma'], badges: 5 },
-  { id: 7, username: 'TiempoViajero', score: 8650, civilizations: ['grecia', 'francia'], badges: 4 },
-  { id: 8, username: 'CronoMaster', score: 8400, civilizations: ['roma'], badges: 3 },
-  { id: 9, username: 'HistoriaGuru', score: 8200, civilizations: ['francia'], badges: 3 },
-  { id: 10, username: 'TiempoCazador', score: 8000, civilizations: ['grecia'], badges: 2 },
-];
+interface LeaderboardEntry {
+  id: string;
+  name: string;
+  civilizationId: string;
+  civilizationName: string;
+  score: number;
+  date: string;
+  mode: string;
+}
 
-// Mock class data
-const classData = [
-  { id: 'clase-3b', name: 'Clase 3°B Historia Mundial', students: 28 },
-  { id: 'clase-4a', name: 'Clase 4°A Historia Antigua', students: 25 },
-  { id: 'clase-3c', name: 'Clase 3°C Ciencias Sociales', students: 30 },
-];
-
-const LeaderboardPage = () => {
-  const [selectedFilter, setSelectedFilter] = useState('global');
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+const LeaderboardPage: React.FC = () => {
+  const { progressByGame } = useGame();
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [filterCivilization, setFilterCivilization] = useState<string>('all');
+  const [filterMode, setFilterMode] = useState<string>('all');
   
-  const handleFilterChange = (filter: string) => {
-    setSelectedFilter(filter);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = 'Tabla de Clasificación | Cronos';
+  }, []);
+  
+  useEffect(() => {
+    // Transform progress data into leaderboard format
+    const entries: LeaderboardEntry[] = [];
     
-    if (filter !== 'class') {
-      setSelectedClass(null);
-    }
-  };
+    Object.entries(progressByGame).forEach(([civilizationId, games]) => {
+      const civilization = civilizations.find(civ => civ.id === civilizationId);
+      if (!civilization) return;
+      
+      games.forEach((game, index) => {
+        entries.push({
+          id: `${civilizationId}-${index}`,
+          name: `Jugador Anónimo`, // In a real app, this would be the player's name
+          civilizationId,
+          civilizationName: civilization.name,
+          score: game.score,
+          date: new Date(game.date).toLocaleDateString(),
+          mode: game.mode
+        });
+      });
+    });
+    
+    // Sort by score (highest first)
+    entries.sort((a, b) => b.score - a.score);
+    
+    setLeaderboardData(entries);
+  }, [progressByGame]);
   
-  const handleClassChange = (classId: string) => {
-    setSelectedClass(classId);
-  };
+  // Apply filters
+  const filteredData = leaderboardData.filter(entry => {
+    const matchesCivilization = filterCivilization === 'all' || entry.civilizationId === filterCivilization;
+    const matchesMode = filterMode === 'all' || entry.mode === filterMode;
+    return matchesCivilization && matchesMode;
+  });
+  
+  // Generate mock data if no real entries exist
+  const displayData = filteredData.length > 0 ? filteredData : generateMockData();
   
   return (
-    <div className="min-h-screen bg-stone-100">
-      <div className="container mx-auto px-4 py-12">
-        <Link 
-          to="/" 
-          className="flex items-center text-amber-700 hover:text-amber-800 mb-8 transition duration-200"
+    <div className="page-container">
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          <span>Volver al inicio</span>
-        </Link>
+          <h1 className="section-title text-center">
+            Tabla de Clasificación
+          </h1>
+          
+          <div className="bg-gold-400/10 border border-gold-500/30 rounded-lg p-6 mb-8 text-center">
+            <Trophy className="w-16 h-16 text-gold-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-display font-bold text-stone-800 mb-2">
+              Los Maestros de la Historia
+            </h2>
+            <p className="text-stone-600 max-w-2xl mx-auto">
+              Aquí se muestran las mejores puntuaciones obtenidas por los jugadores 
+              de Cronos. ¿Podrás superar estos récords y demostrar tu dominio de la historia?
+            </p>
+          </div>
+        </motion.div>
         
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-amber-700 rounded-lg shadow-md mb-8">
-            <div className="p-6 md:p-8">
-              <div className="flex items-center mb-4">
-                <Trophy className="h-8 w-8 text-amber-100 mr-3" />
-                <h1 className="text-2xl md:text-3xl font-serif font-bold text-white">
-                  Tabla de Clasificación
-                </h1>
-              </div>
-              <p className="text-amber-100">
-                Descubre quién domina la historia. Compite con otros estudiantes y demuestra tu conocimiento.
-              </p>
-            </div>
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-2">
+            <h3 className="text-lg font-semibold flex items-center mb-3 sm:mb-0">
+              <Filter size={18} className="mr-2 text-terracotta-500" />
+              Filtros
+            </h3>
+            
+            <span className="text-sm text-stone-500">
+              {filteredData.length} resultados encontrados
+            </span>
           </div>
           
-          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-            {/* Filters */}
-            <div className="p-4 border-b border-stone-200">
-              <div className="flex items-center">
-                <Filter className="h-5 w-5 text-stone-400 mr-2" />
-                <h2 className="text-lg font-medium text-stone-800 mr-4">
-                  Filtros:
-                </h2>
-                
-                <div className="flex flex-wrap">
-                  <button
-                    onClick={() => handleFilterChange('global')}
-                    className={`px-3 py-1 rounded-full text-sm mr-2 mb-2 md:mb-0 ${
-                      selectedFilter === 'global'
-                        ? 'bg-amber-600 text-white' 
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                    }`}
-                  >
-                    Global
-                  </button>
-                  
-                  <button
-                    onClick={() => handleFilterChange('roma')}
-                    className={`px-3 py-1 rounded-full text-sm mr-2 mb-2 md:mb-0 ${
-                      selectedFilter === 'roma'
-                        ? 'bg-amber-600 text-white' 
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                    }`}
-                  >
-                    Imperio Romano
-                  </button>
-                  
-                  <button
-                    onClick={() => handleFilterChange('grecia')}
-                    className={`px-3 py-1 rounded-full text-sm mr-2 mb-2 md:mb-0 ${
-                      selectedFilter === 'grecia'
-                        ? 'bg-amber-600 text-white' 
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                    }`}
-                  >
-                    Antigua Grecia
-                  </button>
-                  
-                  <button
-                    onClick={() => handleFilterChange('francia')}
-                    className={`px-3 py-1 rounded-full text-sm mr-2 mb-2 md:mb-0 ${
-                      selectedFilter === 'francia'
-                        ? 'bg-amber-600 text-white' 
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                    }`}
-                  >
-                    Revolución Francesa
-                  </button>
-                  
-                  <button
-                    onClick={() => handleFilterChange('class')}
-                    className={`px-3 py-1 rounded-full text-sm mr-2 mb-2 md:mb-0 ${
-                      selectedFilter === 'class'
-                        ? 'bg-amber-600 text-white' 
-                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                    }`}
-                  >
-                    Por Clase
-                  </button>
-                </div>
-              </div>
-              
-              {selectedFilter === 'class' && (
-                <div className="mt-4 pl-7">
-                  <div className="flex flex-wrap">
-                    {classData.map(classItem => (
-                      <button
-                        key={classItem.id}
-                        onClick={() => handleClassChange(classItem.id)}
-                        className={`px-3 py-1 rounded-full text-sm mr-2 mb-2 flex items-center ${
-                          selectedClass === classItem.id
-                            ? 'bg-amber-600 text-white' 
-                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                        }`}
-                      >
-                        <Users className="h-3 w-3 mr-1" />
-                        <span>{classItem.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="civilization-filter" className="block text-sm font-medium text-stone-700 mb-1">
+                Civilización
+              </label>
+              <select
+                id="civilization-filter"
+                value={filterCivilization}
+                onChange={(e) => setFilterCivilization(e.target.value)}
+                className="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-terracotta-500 focus:border-terracotta-500"
+              >
+                <option value="all">Todas las civilizaciones</option>
+                {civilizations.map(civ => (
+                  <option key={civ.id} value={civ.id}>{civ.name}</option>
+                ))}
+              </select>
             </div>
             
-            {/* Leaderboard table */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-stone-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                      Posición
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                      Estudiante
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                      Puntuación
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                      Insignias
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-200">
-                  {leaderboardData
-                    .filter(user => {
-                      if (selectedFilter === 'global') return true;
-                      if (selectedFilter === 'class') return true; // In a real app, would filter by class
-                      return user.civilizations.includes(selectedFilter);
-                    })
-                    .map((user, index) => (
-                      <tr key={user.id} className={index < 3 ? 'bg-amber-50' : ''}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            {index < 3 ? (
-                              <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 ${
-                                index === 0 
-                                  ? 'bg-amber-200 text-amber-800' 
-                                  : index === 1 
-                                    ? 'bg-stone-200 text-stone-800' 
-                                    : 'bg-amber-600/20 text-amber-800'
-                              }`}>
-                                <Medal className="h-4 w-4" />
-                              </div>
-                            ) : (
-                              <div className="h-8 w-8 rounded-full flex items-center justify-center mr-2 text-stone-600 font-medium">
-                                {index + 1}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-stone-900">
-                            {user.username}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-stone-900 font-bold">
-                            {user.score.toLocaleString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex">
-                            {Array.from({ length: Math.min(5, user.badges) }).map((_, i) => (
-                              <div 
-                                key={i}
-                                className="h-6 w-6 rounded-full bg-amber-500 -ml-1 first:ml-0 flex items-center justify-center"
-                                style={{ zIndex: 5 - i }}
-                              >
-                                <Trophy className="h-3 w-3 text-white" />
-                              </div>
-                            ))}
-                            
-                            {user.badges > 5 && (
-                              <div className="ml-1 text-xs text-stone-600 flex items-center">
-                                +{user.badges - 5} más
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+            <div>
+              <label htmlFor="mode-filter" className="block text-sm font-medium text-stone-700 mb-1">
+                Modo de Juego
+              </label>
+              <select
+                id="mode-filter"
+                value={filterMode}
+                onChange={(e) => setFilterMode(e.target.value)}
+                className="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-terracotta-500 focus:border-terracotta-500"
+              >
+                <option value="all">Todos los modos</option>
+                <option value="individual">Modo Individual</option>
+                <option value="evaluation">Modo Evaluación</option>
+              </select>
             </div>
           </div>
-          
-          <div className="text-center text-sm text-stone-500">
-            <p>La tabla de clasificación se actualiza cada 24 horas.</p>
-            <p>Último actualización: 15/04/2025 a las 08:00</p>
+        </div>
+        
+        {/* Leaderboard Table */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-stone-200">
+              <thead className="bg-parchment-100">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-700 uppercase tracking-wider w-16">
+                    Rank
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-700 uppercase tracking-wider">
+                    Jugador
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-700 uppercase tracking-wider">
+                    Civilización
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-700 uppercase tracking-wider">
+                    Modo
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-700 uppercase tracking-wider">
+                    Puntuación
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-700 uppercase tracking-wider">
+                    Fecha
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-stone-200">
+                {displayData.map((entry, index) => (
+                  <tr 
+                    key={entry.id}
+                    className={index % 2 === 0 ? 'bg-white' : 'bg-stone-50'}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {index < 3 ? (
+                        <MedalIcon position={index + 1} />
+                      ) : (
+                        <span className="text-stone-500 font-medium">{index + 1}</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-stone-800">{entry.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-stone-700">{entry.civilizationName}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        entry.mode === 'evaluation' 
+                          ? 'bg-gold-100 text-gold-800' 
+                          : 'bg-terracotta-100 text-terracotta-800'
+                      }`}>
+                        {entry.mode === 'evaluation' ? 'Evaluación' : 'Individual'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-lg font-bold text-terracotta-600">{entry.score}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-stone-500">
+                      {entry.date}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </div>
+        
+        {/* Achievements Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <motion.div 
+            className="bg-parchment-50 border border-parchment-300 rounded-lg p-6"
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <div className="flex items-center mb-4">
+              <BookOpen className="w-8 h-8 text-terracotta-500 mr-3" />
+              <h3 className="text-xl font-display font-semibold">Logros por Civilización</h3>
+            </div>
+            <p className="text-stone-700 mb-4">
+              Los logros muestran tu progreso en cada civilización. Completa todas las civilizaciones 
+              para convertirte en un maestro de la historia.
+            </p>
+            <div className="space-y-3">
+              {civilizations.map(civ => (
+                <div key={civ.id} className="flex justify-between items-center">
+                  <span className="font-medium">{civ.name}</span>
+                  <div className="w-32 bg-stone-200 rounded-full h-2.5">
+                    <div 
+                      className="bg-terracotta-500 h-2.5 rounded-full" 
+                      style={{ width: `${civ.bestProgress ? (civ.bestProgress / civ.events.length) * 100 : 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="bg-parchment-50 border border-parchment-300 rounded-lg p-6"
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <div className="flex items-center mb-4">
+              <Clock className="w-8 h-8 text-terracotta-500 mr-3" />
+              <h3 className="text-xl font-display font-semibold">Estadísticas Globales</h3>
+            </div>
+            <p className="text-stone-700 mb-4">
+              Estas estadísticas muestran el rendimiento global de todos los jugadores en Cronos.
+            </p>
+            <div className="space-y-4">
+              <div className="bg-white p-4 rounded-md shadow-sm">
+                <h4 className="font-medium mb-2">Civilización más popular</h4>
+                <div className="flex justify-between items-center">
+                  <span>Imperio Romano</span>
+                  <span className="text-terracotta-600 font-semibold">48% de juegos</span>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-md shadow-sm">
+                <h4 className="font-medium mb-2">Evento más difícil</h4>
+                <div className="flex justify-between items-center">
+                  <span>Establecimiento de la República Romana</span>
+                  <span className="text-terracotta-600 font-semibold">67% de error</span>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-md shadow-sm">
+                <h4 className="font-medium mb-2">Puntuación media</h4>
+                <div className="flex justify-between items-center">
+                  <span>Todos los jugadores</span>
+                  <span className="text-terracotta-600 font-semibold">350 puntos</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
   );
 };
+
+const MedalIcon: React.FC<{ position: number }> = ({ position }) => {
+  let color = "";
+  let icon = null;
+  
+  switch (position) {
+    case 1:
+      color = "text-gold-500";
+      icon = <Trophy size={24} />;
+      break;
+    case 2:
+      color = "text-stone-400";
+      icon = <Medal size={20} />;
+      break;
+    case 3:
+      color = "text-amber-600";
+      icon = <Medal size={20} />;
+      break;
+    default:
+      color = "text-stone-600";
+      icon = position;
+  }
+  
+  return <div className={`font-bold ${color}`}>{icon}</div>;
+};
+
+// Generate mock data for demonstration
+function generateMockData(): LeaderboardEntry[] {
+  const names = [
+    "María García", "Pablo Rodríguez", "Ana Martínez", "Carlos López", 
+    "Lucía Fernández", "David Sánchez", "Carmen Gómez", "Miguel Torres"
+  ];
+  
+  const dates = [
+    "01/03/2025", "28/02/2025", "25/02/2025", "20/02/2025",
+    "15/02/2025", "10/02/2025", "05/02/2025", "01/02/2025"
+  ];
+  
+  return civilizations.flatMap((civ, i) => {
+    return ["individual", "evaluation"].map((mode, j) => {
+      const index = i * 2 + j;
+      return {
+        id: `mock-${index}`,
+        name: names[index % names.length],
+        civilizationId: civ.id,
+        civilizationName: civ.name,
+        score: 700 - (index * 50) + Math.floor(Math.random() * 30),
+        date: dates[index % dates.length],
+        mode: mode
+      };
+    });
+  }).sort((a, b) => b.score - a.score).slice(0, 10);
+}
 
 export default LeaderboardPage;
